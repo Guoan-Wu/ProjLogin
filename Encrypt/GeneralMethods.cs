@@ -49,5 +49,10 @@ namespace ProjLogin.Encrypt
                 return true;
             }
         }
+        public static string CreateRandomPassword()
+        {
+            byte[] random = RandomNumberGenerator.GetBytes(8);
+            return Convert.ToBase64String(random);
+        }
     }
 }

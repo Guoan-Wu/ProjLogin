@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProjLogin.Encrypt;
 using ProjLogin.Models;
+using System.Xml.Linq;
 
 namespace ProjLogin.Controllers
 {
@@ -26,15 +27,9 @@ namespace ProjLogin.Controllers
             {
                 return Problem("Entity set 'ProjLoginDBContext.User'  is null.");
             }
-            int count = _context.Users.Count();
-            //_context.Users.Add(User);
-            var queryUsers = from b in _context.Users
-                             where b.Email == email
-                             select b;
-            foreach (var item in queryUsers)
-            {
-                Console.WriteLine(item.Email);
-                if (GeneralMethods.VerifyOnlineUser(password, item.Password, item.Salt))
+            User? item;
+            if(FunLogin(email, password,out item)) {
+                if(item is not null)
                 {
                     return CreatedAtAction(nameof(Login), new { id = item.User_id }, item);
                 }
@@ -64,64 +59,89 @@ namespace ProjLogin.Controllers
             return CreatedAtAction(nameof(Register), new { id = newUser.User_id }, newUser);
         }
 
-
-
-
-        // PUT: api/User/5
+        // POST: api/User
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(long id, User User)
-        {
-            if (id != User.User_id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(User).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-       
-        // DELETE: api/User/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(long id)
+        [HttpPut("ApplyResetPassword/{email}")]
+        public async Task<ActionResult<User>> ApplyResetPassword(string email)
         {
             if (_context.Users == null)
             {
-                return NotFound();
+                return Problem("Entity set 'ProjLoginDBContext.User'  is null.");
             }
-            var User = await _context.Users.FindAsync(id);
-            if (User == null)
+            try
             {
+                var user = _context.Users.First(a => a.Email == email);
+                string password = GeneralMethods.CreateRandomPassword();
+                //send an email.
+
+                //update db.
+                string dbPassword = new("");
+                string dbSalt = new("");
+                GeneralMethods.HashPassword(password, out dbPassword, out dbSalt);
+                user.Password = dbPassword;
+                user.Salt = dbSalt;
+                await _context.SaveChangesAsync();
+
+                //rewrite user to respond.
+                User newUser = user;
+                newUser.Password = password;
+                newUser.Salt = "";
+                return CreatedAtAction(nameof(ApplyResetPassword), new { id = newUser.User_id }, newUser);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
                 return NotFound();
             }
-
-            _context.Users.Remove(User);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
-        private bool UserExists(long id)
+        // POST: api/User
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost("ResetPassword/{email},{oldPassword},{newPassword}")]
+        public async Task<ActionResult<User>> ResetPassword(string email, 
+            string oldPassword,    string newPassword)
         {
-            return (_context.Users?.Any(e => e.User_id == id)).GetValueOrDefault();
+            if (_context.Users == null)
+            {
+                return Problem("Entity set 'ProjLoginDBContext.User'  is null.");
+            }
+            User? item;
+            if (FunLogin(email, oldPassword, out item))
+            {
+                if (item is not null)
+                {
+                    string dbPassword = new("");
+                    string dbSalt = new("");
+                    GeneralMethods.HashPassword(newPassword, out dbPassword, out dbSalt);
+                    item.Password = dbPassword;
+                    item.Salt = dbSalt;
+                    await _context.SaveChangesAsync();
+                    return CreatedAtAction(nameof(ResetPassword), new { id = item.User_id }, item);
+                }
+            }
+            return NotFound();
+        }
+
+        protected bool FunLogin(string email, string password,out User? user)
+        {
+            if (_context.Users == null)
+            {
+                user= null;
+                return false;
+            }
+            int count = _context.Users.Count();
+            //_context.Users.Add(User);
+            var queryUsers = _context.Users.First(a => a.Email == email);
+            user = queryUsers;
+
+            if (user == null)
+                return false;
+
+            if (GeneralMethods.VerifyOnlineUser(password, user.Password, user.Salt))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
