@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ProjLogin.Encrypt
 {
-    public class GeneralMethods
+    public class HashMethods
     {
         //private bool VerifyOnlineUser(OnlineUser dbOnlineUser, UpdateOnlineUser1Dto request)
         public static bool VerifyOnlineUser(string requestPassword, 
