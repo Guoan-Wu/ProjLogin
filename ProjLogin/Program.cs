@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProjLogin.Controllers;
 using ProjLogin.Encrypt;
+using ProjLogin.Middleware;
 using ProjLogin.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
@@ -91,6 +92,15 @@ builder.Services.AddScoped<TokenFilter>();
 
 var app = builder.Build();
 
+////Jack, add exception handler middleware.
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseExceptionHandler("/error-development");
+//}
+//else
+//{
+//    app.UseExceptionHandler("/error");
+//}
 //jack, query a specific service.
 using (var serviceScope = app.Services.CreateScope())
 {
@@ -110,7 +120,7 @@ app.UseHttpsRedirection();
 //Jack
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMyExceptionHandler();
 app.MapControllers();
 
 app.Run();

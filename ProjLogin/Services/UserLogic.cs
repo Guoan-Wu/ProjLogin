@@ -8,11 +8,8 @@ namespace ProjLogin.Services
 {
     public class UserLogic
     {
-        //private static ProjLoginDBContext? _context;
         private static IUserRepository? _UserRepository;
         public static void SetDBContext(IUserRepository respo) {
-            //if(_context != context)
-            //    _context= context;
             _UserRepository = respo;
         }
        
@@ -26,10 +23,6 @@ namespace ProjLogin.Services
             
             try
             {
-                /*int count = _context.Users.Count();
-                //_context.Users.Add(User);
-                var queryUsers = _context.Users.First(a => a.Email == email);
-                user = queryUsers;*/
                 user = _UserRepository ? .GetID(email);
 
                 if (user == null)
@@ -68,7 +61,6 @@ namespace ProjLogin.Services
                 if(!ok) { return errorMsg; }
                 
                 return errorMsg;
-                //return CreatedAtAction(nameof(Register), new { id = newUser.User_id }, newUser);
             }
             catch (Exception ex)
             {
@@ -104,7 +96,6 @@ namespace ProjLogin.Services
             if (_UserRepository == null)
             {
                 errorMsg = "Entity set 'ProjLoginDBContext.User'  is null.";
-                //return Tuple<string?, string?, string?>.Create
                 return new Tuple<string?, string?, string?>(errorMsg,null,null);
             }
 
@@ -136,16 +127,11 @@ namespace ProjLogin.Services
             
             try
             {
-                //var user = _context.Users.First(a => a.Email == email);
-
                 //update db.
                 string dbPassword = new("");
                 string dbSalt = new("");
                 string password = newPassword;
                 HashMethods.HashPassword(password, out dbPassword, out dbSalt);
-                //user.Password = dbPassword;
-                //user.Salt = dbSalt;
-                //await _context.SaveChangesAsync();
                 if (_UserRepository is null)
                 {
                     errorMsg = "Entity set 'ProjLoginDBContext.User'  is null.";
@@ -154,9 +140,6 @@ namespace ProjLogin.Services
                 if (! await _UserRepository.Update(email, dbPassword, dbSalt))
                     return errorMsg;
 
-                ////rewrite user to respond.
-                //newUser.Password = password;
-                //newUser.Salt = "";
                 return errorMsg;
             }
             catch (Exception ex)

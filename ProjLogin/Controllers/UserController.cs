@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjLogin.Encrypt;
+using ProjLogin.Middleware;
 using ProjLogin.Models;
 using ProjLogin.Services;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Xml.Linq;
 
 namespace ProjLogin.Controllers
@@ -22,13 +24,18 @@ namespace ProjLogin.Controllers
             _userRepository = new UserRepository();
             _userRepository.SetContext(_context);
             UserLogic.SetDBContext(_userRepository);
+            
         }
 
         // POST: api/User
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("Login/{email},{password}")]
         public  IActionResult Login(string email, string password)
-        {           
+        {
+            throw new Exception("login failed.");            
+            //return BadRequest(new HttpException(400, new Exception("Inner issue 1."), sysMsg,"Mocking message for develoer"));
+            //throw new BusinessException(HttpStatusCode.BadRequest, "Login failed because of testing.");
+            
             User? item = UserLogic.Login(email, password);            
             return item != null? Ok(): Problem("Invalid parameters.");           
         }
