@@ -2,6 +2,9 @@
 
 namespace ProjLogin.Middleware
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+#pragma warning disable CS8601 // Possible null reference assignment.
+
     //mocking because I can't find it.
     public class SystemMessage
     {
@@ -57,5 +60,8 @@ namespace ProjLogin.Middleware
         public int StatusCode { get; }
         public SystemMessage UserMessage { get; }
     }
+#pragma warning restore CS8601 // Possible null reference assignment.
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
 }
 

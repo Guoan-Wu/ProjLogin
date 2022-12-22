@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using ProjLogin.DTO;
 using ProjLogin.Encrypt;
 using ProjLogin.Services;
 
@@ -19,12 +20,13 @@ namespace ProjLogin.Controllers
             var headers = context.HttpContext.Request.Headers;
             var token = headers["Authorization"];
             var cont = token.ToString().Substring(7);//6
-            var temp = context.ActionArguments["oldPassword"];
+            var temp = context.ActionArguments["dto"];
             if (temp == null) { 
                 context.Result = new BadRequestObjectResult("No password in the token");
                 return; 
             }
-            string password = temp.ToString()?? "";               
+            string password = ((ResetPasswordDTO)temp).OldPassword;
+     
             string? errorMsg;
             if (!UserLogic.VerifyToken(cont, password, out errorMsg))
             {

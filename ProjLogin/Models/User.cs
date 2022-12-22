@@ -6,6 +6,7 @@ namespace ProjLogin.Models
     [Table("online_user")]
     public class User
     {
+        public User() { }
        public User(int user_id, string user_name, string email, 
            string password, string salt,
            int customer_id,bool active, DateTime? created_at)
