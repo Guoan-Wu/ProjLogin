@@ -12,20 +12,23 @@ namespace Test_ProjLogin.Mapper
     public class MapContainerTest
     {
         [Fact]
-        public static void Map()
+        public static void Map_RegisterDTO_User()
         {
-            RegisterDTO source1 = new RegisterDTO { Email = "abc@12.nz", Password = "qwert12345", Name = "Name1" };            
+            RegisterDTO source1 = new RegisterDTO { Email = "abc@12.nz", Password = "qwert12345", Name = "Name1" };
             var dest1 = MapContainer.Map<RegisterDTO, User>(source1);
-            Assert.Equal(source1.Email, dest1.Email);
-            Assert.Equal(source1.Password,dest1.Password);
-
-
-
+            object[] src = { source1.Name, source1.Email, source1.Password };
+            object[] dst = { dest1.User_name, dest1.Email, dest1.Password };
+            Assert.Equal(src, dst);
+        }
+        
+        [Fact]
+        public static void Map_LoginDTO_User()
+        { 
             LoginDTO source = new LoginDTO { Email = "12a@gmail.nz", Password = "1234er" };
             var dest2 = MapContainer.Map<LoginDTO, User>(source);
-            Console.WriteLine(dest2);
-
-            Assert.True(true);
+            object[] src = {  source.Email, source.Password };
+            object[] dst = {  dest2.Email, dest2.Password };
+            Assert.Equal(src, dst);
         }
     }
 }

@@ -105,6 +105,7 @@ namespace ProjLogin.Controllers
         // POST: api/User
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("ApplyForResetPassToken/{email}")]
+        [ServiceFilter(typeof(ValidationFilter))]
         public IActionResult ApplyForResetPassToken([EmailAddress] [Required] string email)
         {
             if (!ModelState.IsValid)

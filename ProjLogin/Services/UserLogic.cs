@@ -1,6 +1,9 @@
 ﻿using ProjLogin.DTO;
 using ProjLogin.Encrypt;
+using ProjLogin.Middleware;
 using ProjLogin.Models;
+using System.Net;
+
 namespace ProjLogin.Services
 {
     public class UserLogic
@@ -16,17 +19,17 @@ namespace ProjLogin.Services
             User? user = null;
             if (_UserRepository == null)
             {
-                return user;//throw exception.
+                throw new BusinessException(HttpStatusCode.BadRequest, "Database connection failed.");
             }
 
             user = _UserRepository?.GetID(loginDTO.Email);
 
             if (user == null)
-                return user;
+                throw new BusinessException(HttpStatusCode.BadRequest, "Login failed bacaused of no exist user.");
 
-            if (HashMethods.VerifyOnlineUser(loginDTO.Password, user.Password, user.Salt))
+            if (!HashMethods.VerifyOnlineUser(loginDTO.Password, user.Password, user.Salt))
             {
-                return user;
+                throw new BusinessException(HttpStatusCode.BadRequest, "Login failed bacaused of wrong password.");
             }
 
             return user;
@@ -37,34 +40,26 @@ namespace ProjLogin.Services
             string? errorMsg = null;
             if (_UserRepository is null)
             {
-                errorMsg = "Entity set 'ProjLoginDBContext.User'  is null.";
-                return errorMsg;
+                throw new BusinessException(HttpStatusCode.BadRequest, "Database connection failed.");
             }
-            try
-            {
-                string dbPassword = new("");
-                string dbSalt = new("");
-                HashMethods.HashPassword(regsiterDTO.Password, out dbPassword, out dbSalt);
+            
+            string dbPassword = new("");
+            string dbSalt = new("");
+            HashMethods.HashPassword(regsiterDTO.Password, out dbPassword, out dbSalt);
 
-                User newUser = MapContainer.Map<RegisterDTO, User>(regsiterDTO);
-                newUser.Salt = dbSalt;
-                newUser.User_id = 0;
-                newUser.Password = dbPassword;
-                newUser.Customer_id = 110; //110 is fixed.
-                newUser.Active = false;
-                newUser.Created_at = null;
+            User newUser = MapContainer.Map<RegisterDTO, User>(regsiterDTO);
+            
+            newUser.Salt = dbSalt;
+            newUser.User_id = 0;
+            newUser.Password = dbPassword;
+            newUser.Customer_id = 110; //110 is fixed.
 
-                newUser.WriteLine();
-                bool ok = await _UserRepository.Add(newUser);
-                if (!ok) { return errorMsg; }
+            newUser.WriteLine();
+            bool ok = await _UserRepository.Add(newUser);
+            if (!ok) { return errorMsg; }
 
-                return errorMsg;
-            }
-            catch (Exception ex)
-            {
-                errorMsg = ex.Message;
-                return errorMsg;
-            }
+            return errorMsg;
+            
         }
         public static bool VerifyToken(string token, string password, out string? errorMsg)
         {
@@ -97,58 +92,46 @@ namespace ProjLogin.Services
                 return new Tuple<string?, string?, string?>(errorMsg, null, null);
             }
 
-            //1. creae random password
-            try
-            {
-                var user = _UserRepository.GetID(email);
-                string password = HashMethods.CreateRandomPassword();
-                string dbPassword = new("");
-                string dbSalt = new("");
-                HashMethods.HashPassword(password, out dbPassword, out dbSalt);
+            //1. create random password
+            
+            
+            var user = _UserRepository.GetID(email);
+            string password = HashMethods.CreateRandomPassword();
+            string dbPassword = new("");
+            string dbSalt = new("");
+            HashMethods.HashPassword(password, out dbPassword, out dbSalt);
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
-                user.Password = dbPassword;
+            user.Password = dbPassword;
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
-                user.Salt = dbSalt;
+            user.Salt = dbSalt;
 
-                //create token
-                string jwtStr = JwtHelper.IssueJwt(email, password);//sent original password rather than dbpassword.
+            //create token
+            string jwtStr = JwtHelper.IssueJwt(email, password);//sent original password rather than dbpassword.
 
-                return new Tuple<string?, string?, string?>(errorMsg, password, jwtStr);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return new Tuple<string?, string?, string?>(errorMsg, null, null);
-            }
+            return new Tuple<string?, string?, string?>(errorMsg, password, jwtStr);
         }
         public static async Task<string?> ResetPassword(ResetPasswordDTO dto)
         //string email,string newPassword)
         {
+            if (_UserRepository is null)
+            {
+                throw new BusinessException(HttpStatusCode.InternalServerError, "Database connection failed.");
+            }
+
             string? errorMsg = null;
 
-            try
-            {
-                //update db.
-                string dbPassword = new("");
-                string dbSalt = new("");
-                string password = dto.NewPassword;
-                HashMethods.HashPassword(password, out dbPassword, out dbSalt);
-                if (_UserRepository is null)
-                {
-                    errorMsg = "Entity set 'ProjLoginDBContext.User'  is null.";
-                    return errorMsg;
-                }
-                if (!await _UserRepository.Update(dto.Email, dbPassword, dbSalt))
-                    return errorMsg;
+            //update db.
+            string dbPassword = new("");
+            string dbSalt = new("");
+            string password = dto.NewPassword;
+            HashMethods.HashPassword(password, out dbPassword, out dbSalt);
 
-                return errorMsg;
-            }
-            catch (Exception ex)
+            if (!await _UserRepository.Update(dto.Email, dbPassword, dbSalt))
             {
-                Console.WriteLine(ex.Message);
-                errorMsg = ex.Message + " " + ex.StackTrace;
-                return errorMsg;
+                throw new BusinessException(HttpStatusCode.InternalServerError, "Repository update failed.");
             }
+
+            return errorMsg;
         }
     }
 }

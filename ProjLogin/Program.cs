@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -58,6 +59,12 @@ builder.Services.AddAuthorization(options => {
     options.AddPolicy("SystemAndAdmin", policy => policy.RequireRole("Admin").RequireRole("System"));//ÇÒµÄ¹ØÏµ
 });
 
+//Jac, config filter for validating parameters.
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
+
 //Jack ,add token to header on Swageer.
 builder.Services.AddSwaggerGen(c =>
 {
@@ -88,6 +95,9 @@ builder.Services.AddDbContext<ProjLoginDBContext>(options =>
 
 //Jack for filter scope.
 builder.Services.AddScoped<TokenFilter>();
+builder.Services.AddScoped<ValidationFilter>();
+
+
 
 
 var app = builder.Build();

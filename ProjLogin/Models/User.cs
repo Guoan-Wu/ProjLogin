@@ -34,8 +34,8 @@ namespace ProjLogin.Models
         [Required]
         public string Salt { get; set; }
         public int Customer_id { get; set; }
-        public bool Active { get; set; }
-        public DateTime? Created_at { get; set; }
+        public bool Active { get; set; } = false;
+        public DateTime? Created_at { get; set; } = DateTime.Now;
 
 
     }
