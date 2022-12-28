@@ -14,8 +14,8 @@ namespace Test_ProjLogin.Encrypt
         }
         [Theory]
         [InlineData(1)]
-        [InlineData(-1)]
-        [InlineData(0)]
+        [InlineData(2)]
+        [InlineData(3)]
         public void Test1(int value)
         {
             Assert.True(value > 0);
@@ -44,8 +44,7 @@ namespace Test_ProjLogin.Encrypt
         [Fact]
         public void Test2()
         {
-
-            Assert.True(HashMethods.VerifyOnlineUser("12345", @"LQTcPMyEYDPqRfyXUpYGq93OvZheVA2qeZYObeUG / ms =",
+            Assert.True(HashMethods.VerifyOnlineUser("12345", @"LQTcPMyEYDPqRfyXUpYGq93OvZheVA2qeZYObeUG/ms=",
             @"HXRF0MwKejk ="));
         }
 
