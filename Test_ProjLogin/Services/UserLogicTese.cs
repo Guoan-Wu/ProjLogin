@@ -18,37 +18,44 @@ namespace Test_ProjLogin.Services
         {
             //Arrange
             var mockRespo = new Mock<IUserRepository>();
-            string email = "jack@jack.abc";
-            User user = new User(1,"","",email,"",1,true,null);
+            string email = "jack14@jack.nz";
+            User user = new User(1, "jack14",email, @"8WGzAbClvDaBTmRBEHHDfdTPFu3Pb/r/K81QcRhMhlo=", @"Ze/OD+QOr/8=", 1,true,null);
 
-            mockRespo.Setup(x => x.GetID("jack@jack.abc")).Returns(user);
+            mockRespo.Setup(x => x.GetID(email)).Returns(user);
             UserLogic.SetDBContext(mockRespo.Object);
 
 
             //act
-            var result = UserLogic.Login(new LoginDTO { Email = email, Password = "" });
+            var result = UserLogic.Login(new LoginDTO { Email = email, Password = "123456" });
 
             //verify
             Assert.Equal(user, result);
         }
         [Fact]
         public void Login_WithFail()
-        {
-            //Arrange
-            var mockRespo = new Mock<IUserRepository>();
-            User user = new User(1, "", "others@gmail.com", "", "", 1, true, null);
-            string email = "jack@jack.abc";
+        {           
+            try
+            {
+                User user = new User(1, "jack14", @"jack14@jack.nz", @"8WGzAbClvDaBTmRBEHHDfdTPFu3Pb/r/K81QcRhMhlo=", @"Ze/OD+QOr/8=", 1, true, null);
+                //Arrange
+                var mockRespo = new Mock<IUserRepository>();
+
+                string email = "noname@jack.abc";
 
 #pragma warning disable CS8604 // Possible null reference argument.
-            mockRespo.Setup(x => x.GetID(user.Email)).Returns(user);
+                mockRespo.Setup(x => x.GetID(user.Email)).Returns(user);
 #pragma warning restore CS8604 // Possible null reference argument.
-            UserLogic.SetDBContext(mockRespo.Object);
+                UserLogic.SetDBContext(mockRespo.Object);
 
-            //act
-            var result = UserLogic.Login(new LoginDTO { Email = email, Password = "" });
+                //act
+                var result = UserLogic.Login(new LoginDTO { Email = email, Password = "wrongpass" });   
+                Assert.False(user == result);
 
-            //verify
-            Assert.True(user != result);
+            }
+            catch
+            {
+                Assert.False(false);
+            }           
         }
     }
 
